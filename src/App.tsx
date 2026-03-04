@@ -1,8 +1,8 @@
-import "./App.css";
 import React, { useState } from "react";
-import Header from "./components/Header";
-import NaverMap from "./components/NaverMap";
+import "./App.css";
 import locationIcon from "./assets/icons/locationIcon.svg";
+import Header from "./components/Header";
+import KakaoMap from "./components/KakaoMap";
 
 const App: React.FC = () => {
   // 현재 활성화된 모달 상태 관리(검색, 장소, 설정)
@@ -19,7 +19,7 @@ const App: React.FC = () => {
       />
       {/* 지도 */}
       <main style={{ flex: 1, position: "relative" }}>
-        <NaverMap />
+        <KakaoMap />
         <button
           className="location-btn"
           onClick={() => setActiveModal("place")}
