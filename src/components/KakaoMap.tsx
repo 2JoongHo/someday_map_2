@@ -1,67 +1,84 @@
 import React, { useEffect, useRef } from "react";
 
-const KakaoMap: React.FC = () => {
+interface KakaoMapProps {
+  keyword: string;
+}
+
+const KakaoMap: React.FC<KakaoMapProps> = ({ keyword }) => {
   const mapContainer = useRef<HTMLDivElement | null>(null);
-  const mapInstance = useRef<any>(null); // 지도 객체 보관용
-  const markerInstance = useRef<any>(null); // 단일 마커 핸들링용
+  const mapInstance = useRef<any>(null);
+  const markerInstance = useRef<any>(null);
 
   useEffect(() => {
     const initMap = () => {
       const { kakao } = window as any;
-
-      // SDK 로드 대기 (Polling)
       if (!kakao || !kakao.maps) {
         setTimeout(initMap, 100);
         return;
       }
 
       kakao.maps.load(() => {
-        // 중복 초기화 방지
         if (!mapContainer.current || mapInstance.current) return;
 
+        // 초기 접속 시 보여줄 임시 중심점 (위치 권한 거부 시 대비)
+        const defaultPos = new kakao.maps.LatLng(37.245833, 127.056667); // 망포역
+        // 지도 초기 값
         const options = {
-          center: new kakao.maps.LatLng(37.245833, 127.056667), // 망포역
-          level: 3,
+          center: defaultPos, // 임시 중심점을 중심으로
+          level: 3, // 확대 레벨
         };
-
+        // 지도 생성하기
         const map = new kakao.maps.Map(mapContainer.current, options);
+        // 지도 인스턴스 저장
         mapInstance.current = map;
 
-        // 장소 검색 서비스 객체 초기화
-        const ps = new kakao.maps.services.Places();
+        // 접속 즉시 브라우저 GPS로 실제 위치 파악
+        if (navigator.geolocation) {
+          navigator.geolocation.getCurrentPosition(
+            (position) => {
+              const lat = position.coords.latitude;
+              const lng = position.coords.longitude;
+              const currentPos = new kakao.maps.LatLng(lat, lng);
 
-        // 키워드 검색 및 마커 업데이트 로직
-        const searchPlace = (keyword: string) => {
-          ps.keywordSearch(keyword, (data: any, status: any) => {
-            if (status === kakao.maps.services.Status.OK) {
-              const coords = new kakao.maps.LatLng(data[0].y, data[0].x);
+              // 지도의 중심을 내 위치로 변경
+              map.setCenter(currentPos);
 
-              // 마커 싱글톤 유지 (기존 마커 제거 후 갱신)
-              if (markerInstance.current) markerInstance.current.setMap(null);
-
-              markerInstance.current = new kakao.maps.Marker({
-                position: coords,
+              // 내 위치임을 알리는 마커(옵션)
+              new kakao.maps.Marker({
+                position: currentPos,
                 map: map,
               });
 
-              // 결과 위치로 부드러운 시점 이동
-              map.panTo(coords);
-
-              // Debug: 검색 결과 상호/주소 확인
-              console.log(`[Search Success] ${data[0].place_name}`);
-            } else {
-              alert("검색 결과가 없습니다.");
-            }
-          });
-        };
-
-        // TODO: Header 검색창 UI 연결 시 제거 예정
-        setTimeout(() => searchPlace("스타벅스 망포DT점"), 3000);
+              console.log("현재 위치로 중심점 변경 완료");
+            },
+            (error) => {
+              console.error("위치 정보를 가져올 수 없습니다.", error);
+            },
+          );
+        }
       });
     };
-
     initMap();
   }, []);
+
+  // 검색어 변경 감지 로직
+  useEffect(() => {
+    const { kakao } = window as any;
+    if (!mapInstance.current || !keyword || !kakao) return;
+
+    const ps = new kakao.maps.services.Places();
+    ps.keywordSearch(keyword, (data: any, status: any) => {
+      if (status === kakao.maps.services.Status.OK) {
+        const coords = new kakao.maps.LatLng(data[0].y, data[0].x);
+        if (markerInstance.current) markerInstance.current.setMap(null);
+        markerInstance.current = new kakao.maps.Marker({
+          position: coords,
+          map: mapInstance.current,
+        });
+        mapInstance.current.panTo(coords);
+      }
+    });
+  }, [keyword]);
 
   return (
     <div
