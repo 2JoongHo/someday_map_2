@@ -1,88 +1,96 @@
 import React, { useEffect, useRef } from "react";
 
+// Props 규격을 키워드 방식에서 선택된 장소 객체 방식으로 변경
 interface KakaoMapProps {
-  keyword: string;
+  selectedPlace: any;
 }
 
-const KakaoMap: React.FC<KakaoMapProps> = ({ keyword }) => {
+const KakaoMap: React.FC<KakaoMapProps> = ({ selectedPlace }) => {
   const mapContainer = useRef<HTMLDivElement | null>(null);
   const mapInstance = useRef<any>(null);
-  const markerInstance = useRef<any>(null);
 
-  useEffect(() => {
-    const initMap = () => {
-      const { kakao } = window as any;
-      if (!kakao || !kakao.maps) {
-        setTimeout(initMap, 100);
-        return;
-      }
+  // 마커 인스턴스 분리 관리
+  const searchMarker = useRef<any>(null); // 검색 결과 마커
+  const myLocationMarker = useRef<any>(null); // 내 위치 마커
 
-      kakao.maps.load(() => {
-        if (!mapContainer.current || mapInstance.current) return;
+  // 내 위치 이동 완료 여부 플래그
+  const isInitialPosSet = useRef(false);
 
-        // 초기 접속 시 보여줄 임시 중심점 (위치 권한 거부 시 대비)
-        const defaultPos = new kakao.maps.LatLng(37.245833, 127.056667); // 망포역
-        // 지도 초기 값
-        const options = {
-          center: defaultPos, // 임시 중심점을 중심으로
-          level: 3, // 확대 레벨
-        };
-        // 지도 생성하기
-        const map = new kakao.maps.Map(mapContainer.current, options);
-        // 지도 인스턴스 저장
-        mapInstance.current = map;
-
-        // 접속 즉시 브라우저 GPS로 실제 위치 파악
-        if (navigator.geolocation) {
-          navigator.geolocation.getCurrentPosition(
-            (position) => {
-              const lat = position.coords.latitude;
-              const lng = position.coords.longitude;
-              const currentPos = new kakao.maps.LatLng(lat, lng);
-
-              // 지도의 중심을 내 위치로 변경
-              map.setCenter(currentPos);
-
-              // 내 위치임을 알리는 마커(옵션)
-              new kakao.maps.Marker({
-                position: currentPos,
-                map: map,
-              });
-
-              console.log("현재 위치로 중심점 변경 완료");
-            },
-            (error) => {
-              console.error("위치 정보를 가져올 수 없습니다.", error);
-            },
-          );
-        }
-      });
-    };
-    initMap();
-  }, []);
-
-  // 검색어 변경 감지 로직
+  // 지도 최초 초기화
   useEffect(() => {
     const { kakao } = window as any;
-    if (!mapInstance.current || !keyword || !kakao) return;
+    if (!mapContainer.current || !kakao) return;
 
-    const ps = new kakao.maps.services.Places();
-    ps.keywordSearch(keyword, (data: any, status: any) => {
-      if (status === kakao.maps.services.Status.OK) {
-        const coords = new kakao.maps.LatLng(data[0].y, data[0].x);
-        if (markerInstance.current) markerInstance.current.setMap(null);
-        markerInstance.current = new kakao.maps.Marker({
-          position: coords,
-          map: mapInstance.current,
-        });
-        mapInstance.current.panTo(coords);
-      }
+    kakao.maps.load(() => {
+      if (mapInstance.current) return;
+
+      const options = {
+        center: new kakao.maps.LatLng(37.245833, 127.056667), // 망포역
+        level: 3,
+      };
+      mapInstance.current = new kakao.maps.Map(mapContainer.current, options);
+
+      // 지도 생성 직후 내 위치 조회 시작
+      fetchMyLocation();
     });
-  }, [keyword]);
+  }, []);
+
+  // 내 위치 가져오기 및 마커 표시
+  const fetchMyLocation = () => {
+    const { kakao } = window as any;
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const lat = position.coords.latitude;
+          const lng = position.coords.longitude;
+          const currentPos = new kakao.maps.LatLng(lat, lng);
+
+          // 내 위치 마커 생성/갱신
+          if (!myLocationMarker.current) {
+            myLocationMarker.current = new kakao.maps.Marker({
+              position: currentPos,
+              map: mapInstance.current,
+            });
+          } else {
+            myLocationMarker.current.setPosition(currentPos);
+          }
+
+          // 앱 실행 후 최초 1회만 내 위치로 중심 이동
+          // 사용자가 그 사이 이미 장소를 선택했다면 이동하지 않음
+          if (!isInitialPosSet.current && !selectedPlace) {
+            mapInstance.current.setCenter(currentPos);
+            isInitialPosSet.current = true;
+          }
+        },
+        (error) => console.error("위치 획득 실패:", error)
+      );
+    }
+  };
+
+  // 선택된 장소로 지도 이동 및 마커 표시
+  useEffect(() => {
+    const { kakao } = window as any;
+    // 선택된 장소가 없거나 지도가 아직 안 만들어졌으면 중단
+    if (!mapInstance.current || !selectedPlace || !kakao) return;
+
+    const coords = new kakao.maps.LatLng(selectedPlace.y, selectedPlace.x);
+
+    // 검색 마커 업데이트
+    if (searchMarker.current) searchMarker.current.setMap(null);
+    searchMarker.current = new kakao.maps.Marker({
+      position: coords,
+      map: mapInstance.current,
+    });
+
+    // 해당 좌표로 부드럽게 이동
+    mapInstance.current.panTo(coords);
+
+    // 사용자가 장소를 눌러 이동했으므로, 이후 GPS 응답에 의한 자동 이동은 차단
+    isInitialPosSet.current = true;
+  }, [selectedPlace]); // selectedPlace가 변경될 때마다 실행
 
   return (
     <div
-      id="map"
       ref={mapContainer}
       style={{ width: "100%", height: "100%", minHeight: "500px" }}
     />

@@ -1,12 +1,12 @@
 import React, { useState } from "react";
 import "./App.css";
 import locationIcon from "./assets/icons/locationIcon.svg";
-import Header from "./components/Header";
-import KakaoMap from "./components/KakaoMap";
-import ModalLayout from "./modals/ModalLayout";
-import SearchModal from "./modals/SearchModal";
-import PlaceModal from "./modals/PlaceModal";
-import SettingsModal from "./modals/SettingsModal";
+import Header from "./components/Header"; // 헤더 컴포넌트
+import KakaoMap from "./components/KakaoMap"; // 카카오맵 컴포넌트
+import ModalLayout from "./modals/ModalLayout"; // 모달 레이아웃 컴포넌트
+import PlaceModal from "./modals/PlaceModal"; // 내 장소 모달 컴포넌트
+import SearchModal from "./modals/SearchModal"; // 검색창 모달 컴포넌트
+import SettingsModal from "./modals/SettingsModal"; // 설정 모달 컴포넌트
 
 const App: React.FC = () => {
   // 현재 활성화된 모달 상태 관리(검색, 장소, 설정)
@@ -14,8 +14,14 @@ const App: React.FC = () => {
     "search" | "place" | "settings" | null
   >(null);
 
+  // 검색어 상태
+  const [keyword, setKeyword] = useState<string>("");
+
   // 모달을 닫는 공통 함수
   const closeModal = () => setActiveModal(null);
+
+  // 장소를 지도로 넘겨주는 상태
+  const [selectedPlace, setSelectedPlace] = useState<any>(null);
 
   return (
     <div className="App">
@@ -27,7 +33,8 @@ const App: React.FC = () => {
       />
       {/* 지도 */}
       <main style={{ flex: 1, position: "relative" }}>
-        <KakaoMap keyword="" />
+        {/* 지도는 키워드를 계속 보게함 */}
+        <KakaoMap selectedPlace={selectedPlace} />
         <button
           className="location-btn"
           onClick={() => setActiveModal("place")}
@@ -40,7 +47,12 @@ const App: React.FC = () => {
       {/* 장소 검색 모달 */}
       {activeModal === "search" && (
         <ModalLayout title="장소 검색" onClose={closeModal}>
-          <SearchModal />
+          <SearchModal
+            onSelectPlace={(place) => {
+              setSelectedPlace(place);
+              closeModal();
+            }}
+          />
         </ModalLayout>
       )}
 
