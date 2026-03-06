@@ -14,14 +14,14 @@ const App: React.FC = () => {
     "search" | "place" | "settings" | null
   >(null);
 
-  // 검색어 상태
-  const [keyword, setKeyword] = useState<string>("");
-
   // 모달을 닫는 공통 함수
   const closeModal = () => setActiveModal(null);
 
   // 장소를 지도로 넘겨주는 상태
   const [selectedPlace, setSelectedPlace] = useState<any>(null);
+
+  // 내 위치로 이동신호 보내는 상태
+  const [moveToMine, setMoveToMine] = useState<number>(0);
 
   return (
     <div className="App">
@@ -34,10 +34,10 @@ const App: React.FC = () => {
       {/* 지도 */}
       <main style={{ flex: 1, position: "relative" }}>
         {/* 지도는 키워드를 계속 보게함 */}
-        <KakaoMap selectedPlace={selectedPlace} />
+        <KakaoMap selectedPlace={selectedPlace} moveToMine={moveToMine} />
         <button
           className="location-btn"
-          onClick={() => setActiveModal("place")}
+          onClick={() => setMoveToMine((prev) => prev + 1)}
         >
           <img src={locationIcon} alt="내 위치" />
         </button>
