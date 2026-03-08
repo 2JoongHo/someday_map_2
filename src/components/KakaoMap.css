@@ -1,0 +1,45 @@
+/* 인포윈도우 컨테이너 */
+.infowindow-container {
+  padding: 15px;
+  min-width: 200px;
+  background: #fff;
+}
+
+/* 입력창 감싸는 박스 */
+.infowindow-input-wrapper {
+  margin-bottom: 8px;
+}
+
+/* 입력창 (Input) */
+.infowindow-input {
+  width: 100%;
+  padding: 6px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-weight: bold;
+  box-sizing: border-box; /* 패딩이 너비를 넘지 않게 함 */
+}
+
+/* 주소 텍스트 */
+.infowindow-address {
+  font-size: 12px;
+  color: #666;
+  margin-bottom: 10px;
+}
+
+/* 저장 버튼 */
+.infowindow-save-btn {
+  width: 100%;
+  padding: 8px;
+  background: #4a90e2;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 13px;
+  transition: background 0.2s;
+}
+
+.infowindow-save-btn:hover {
+  background: #357abd;
+}
