@@ -44,6 +44,13 @@ const App: React.FC = () => {
     alert("내 장소에 저장되었습니다!");
   };
 
+  // 장소 삭제 함수
+  const handleDeletePlace = (id: number) => {
+    if (window.confirm("이 장소를 삭제할까요?")) {
+      setSavedPlaces((prev) => prev.filter((place) => place.id !== id));
+    }
+  };
+
   // 데이터가 바뀔 때마다 로컬스토리지에 자동 저장
   useEffect(() => {
     localStorage.setItem("my-places", JSON.stringify(savedPlaces));
@@ -101,6 +108,7 @@ const App: React.FC = () => {
               });
               closeModal();
             }}
+            onDelete={handleDeletePlace}
           />
         </ModalLayout>
       )}

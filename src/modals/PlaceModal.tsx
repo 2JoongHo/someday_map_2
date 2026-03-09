@@ -6,9 +6,14 @@ import "./PlaceModal.css";
 interface PlaceModalProps {
   places: any[];
   onSelect: (place: any) => void;
+  onDelete: (id: number) => void;
 }
 
-const PlaceModal: React.FC<PlaceModalProps> = ({ places, onSelect }) => {
+const PlaceModal: React.FC<PlaceModalProps> = ({
+  places,
+  onSelect,
+  onDelete,
+}) => {
   return (
     <div className="place-list-container">
       {places.length === 0 ? (
@@ -21,8 +26,20 @@ const PlaceModal: React.FC<PlaceModalProps> = ({ places, onSelect }) => {
               key={place.id}
               onClick={() => onSelect(place)}
             >
-              <div className="place-items-name">{place.name}</div>
-              <div>{place.address}</div>
+              <div className="place-info-wrapper">
+                <div className="place-item-name">{place.name}</div>
+                <div className="place-item-address">{place.address}</div>
+              </div>
+
+              <button
+                className="place-delete-btn"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDelete(place.id);
+                }}
+              >
+                삭제
+              </button>
             </li>
           ))}
         </ul>

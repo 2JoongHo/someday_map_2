@@ -15,10 +15,16 @@
 }
 
 .place-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   padding: 15px;
   border-bottom: 1px solid #eee;
   cursor: pointer;
-  transition: background 0.2s ease;
+}
+
+.place-info-wrapper {
+  flex: 1;
 }
 
 .place-item:hover {
@@ -28,4 +34,20 @@
 .place-item-address {
   font-size: 12px;
   color: #666;
+}
+
+.place-delete-btn {
+  padding: 5px 10px;
+  background-color: #ff4d4f;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 11px;
+  cursor: pointer;
+  margin-left: 10px;
+  transition: background 0.2s;
+}
+
+.place-delete-btn:hover {
+  background-color: #ff7875;
 }
