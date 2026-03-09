@@ -20,7 +20,11 @@ const KakaoMap: React.FC<KakaoMapProps> = ({
   // 마커 인스턴스 분리 관리
   const searchMarker = useRef<any>(null); // 검색 결과 마커
   const myLocationMarker = useRef<any>(null); // 내 위치 마커
-  const infoWindowInstance = useRef<any>(null);
+  const infoWindowInstance = useRef<any>(null); // 정보창
+
+  // 저장된 장소의 마커 담아둘 배열
+  const permanentMarkers = useRef<any[]>([]);
+
   // 내 위치 이동 완료 여부 플래그
   const isInitialPosSet = useRef(false);
 
@@ -93,12 +97,18 @@ const KakaoMap: React.FC<KakaoMapProps> = ({
     const { kakao } = window as any;
     if (!mapInstance.current || !kakao) return;
 
+    // 기존 그려진 마커를 삭제
+    permanentMarkers.current.forEach((marker) => marker.setMap(null));
+    permanentMarkers.current = []; // 배열 바꾸기
+
     savedPlaces.forEach((place) => {
-      new kakao.maps.Marker({
+      const marker = new kakao.maps.Marker({
         position: new kakao.maps.LatLng(place.lat, place.lng),
         map: mapInstance.current,
         title: place.name,
       });
+      // 추후 삭제 가능하게 Ref 배열에 보관
+      permanentMarkers.current.push(marker);
     });
   }, [savedPlaces]); // 저장 목록이 바뀔 때마다 실행
 
