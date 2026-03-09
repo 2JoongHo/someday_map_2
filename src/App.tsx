@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import "./App.css";
 import locationIcon from "./assets/icons/locationIcon.svg";
 import Header from "./components/Header"; // 헤더 컴포넌트
@@ -90,7 +90,18 @@ const App: React.FC = () => {
       {/* 내 장소 리스트 모달 */}
       {activeModal === "place" && (
         <ModalLayout title="내 장소" onClose={closeModal}>
-          <PlaceModal places={savedPlaces} />
+          <PlaceModal
+            places={savedPlaces}
+            onSelect={(place) => {
+              setSelectedPlace({
+                place_name: place.name,
+                address_name: place.address,
+                x: place.lng,
+                y: place.lat,
+              });
+              closeModal();
+            }}
+          />
         </ModalLayout>
       )}
 
