@@ -102,11 +102,34 @@ const KakaoMap: React.FC<KakaoMapProps> = ({
     permanentMarkers.current = []; // 배열 바꾸기
 
     savedPlaces.forEach((place) => {
+      // 마커 생성
       const marker = new kakao.maps.Marker({
         position: new kakao.maps.LatLng(place.lat, place.lng),
         map: mapInstance.current,
         title: place.name,
       });
+
+      // 마커 클릭시 정보창 보여주기
+      kakao.maps.event.addListener(marker, "click", () => {
+        // 기존 정보창이 있다면 닫기
+        if (infoWindowInstance.current) infoWindowInstance.current.close();
+
+        // 저장 된 이름, 주소 정보창
+        const content = `
+          <div class="infowindow-container">
+            <div class="infowindow-item-name">${place.name}</div>
+            <div class="infowindow-address">${place.address}</div>
+          </div>
+        `;
+
+        infoWindowInstance.current = new kakao.maps.InfoWindow({
+          content: content,
+          removable: true,
+        });
+
+        infoWindowInstance.current.open(mapInstance.current, marker);
+      });
+
       // 추후 삭제 가능하게 Ref 배열에 보관
       permanentMarkers.current.push(marker);
     });

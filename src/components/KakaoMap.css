@@ -43,3 +43,10 @@
 .infowindow-save-btn:hover {
   background: #357abd;
 }
+
+.infowindow-saved-name {
+  font-weight: bold;
+  font-size: 14px;
+  color: #333;
+  margin-bottom: 6px; /* 주소와의 간격 */
+}
