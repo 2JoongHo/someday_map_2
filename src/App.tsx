@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import "./App.css";
 import locationIcon from "./assets/icons/locationIcon.svg";
 import Header from "./components/Header"; // 헤더 컴포넌트
@@ -21,7 +21,7 @@ const getDistance = (
   lat1: number,
   lng1: number,
   lat2: number,
-  lng2: number,
+  lng2: number
 ) => {
   const R = 6371e3;
   const φ1 = (lat1 * Math.PI) / 180;
@@ -56,12 +56,20 @@ const App: React.FC = () => {
     return saved ? JSON.parse(saved) : [];
   });
 
-  // 알림 반경 (기본 100m)
-  const [alertRadius, setAlertRadius] = useState(100);
+  // 알림 반경 상태
+  const [alertRadius, setAlertRadius] = useState<number>(() => {
+    const savedRadius = localStorage.getItem("alertRadius");
+    // 저장된 값이 없을 경우 300m을 기본값으로
+    return savedRadius ? Number(savedRadius) : 300;
+  });
+
   const [currentLocation, setCurrentLocation] = useState<{
     lat: number;
     lng: number;
   } | null>(null);
+
+  // 알림 중복 방지를 위한 마지막 시간 기억 객체
+  const lastAlertTime = useRef<{ [key: number]: number }>({});
 
   // 사용자의 위치를 계속 추적
   useEffect(() => {
@@ -71,25 +79,33 @@ const App: React.FC = () => {
     const watchId = navigator.geolocation.watchPosition(
       (position) => {
         const { latitude: lat, longitude: lng } = position.coords;
-        setCurrentLocation({ lat, lng });
 
         // 내 위치가 바뀔 때마다 저장된 장소들과 거리 비교
         savedPlaces.forEach((place) => {
           const distance = getDistance(lat, lng, place.lat, place.lng);
 
+          // 설정 반경(100m) 이내 진입 확인
           if (distance <= alertRadius) {
-            console.log(
-              `${place.name}이(가) ${Math.round(distance)}m 거리에 있습니다!`,
-            );
+            const now = Date.now();
+            const lastTime = lastAlertTime.current[place.id] || 0;
+
+            // 마지막 알림 후 5분이 지났는지 확인 (재알림 방지)
+            if (now - lastTime > 5 * 60 * 1000) {
+              // 실제 알림
+              if (Notification.permission === "granted") {
+                new Notification("근처에 저장한 장소가 있어요!", {
+                  body: `[${place.name}]이(가) 약 ${Math.round(distance)}m 거리에 있습니다.`,
+                });
+
+                // 알림 시간 업데이트
+                lastAlertTime.current[place.id] = now;
+              }
+            }
           }
         });
       },
-      (error) => console.error("위치 추적 오류:", error),
-      {
-        enableHighAccuracy: true, // 높은 정확도 (GPS 사용)
-        maximumAge: 0,
-        timeout: 5000,
-      },
+      (error) => console.error(error),
+      { enableHighAccuracy: true }
     );
 
     return () => navigator.geolocation.clearWatch(watchId); // 컴포넌트 언마운트 시 감시 종료
@@ -113,6 +129,27 @@ const App: React.FC = () => {
   useEffect(() => {
     localStorage.setItem("my-places", JSON.stringify(savedPlaces));
   }, [savedPlaces]);
+
+  // 알림 로직 추가
+  useEffect(() => {
+    if (!("Notification" in window)) {
+      console.log("이 브라우저는 알림을 지원하지 않습니다.");
+      return;
+    }
+    // 권한이 "default" 상태라면 요청
+    if (Notification.permission === "default") {
+      Notification.requestPermission().then((permission) => {
+        if (permission === "granted") {
+          console.log("알림이 허용됐습니다.");
+        }
+      });
+    }
+  }, []);
+
+  // 반경 설정값이 변경될 때마다 로컬에 저장
+  useEffect(() => {
+    localStorage.setItem("alertRadius", alertRadius.toString());
+  }, [alertRadius]);
 
   return (
     <div className="App">
@@ -174,7 +211,7 @@ const App: React.FC = () => {
       {/* 설정 모달 */}
       {activeModal === "settings" && (
         <ModalLayout title="설정" onClose={closeModal}>
-          <SettingsModal />
+          <SettingsModal radius={alertRadius} setRadius={setAlertRadius} />
         </ModalLayout>
       )}
     </div>

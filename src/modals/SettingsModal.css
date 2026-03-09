@@ -1,0 +1,53 @@
+/* src/modals/SettingModal.css */
+
+.setting-container {
+  padding: 20px;
+  display: flex;
+  flex-clumn: column;
+  gap: 30px;
+}
+
+.setting-item {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.setting-label {
+  font-size: 16px;
+  font-weight: bold;
+  color: #333;
+  display: flex;
+  justify-content: space-between;
+}
+
+.radius-value {
+  color: #4a90e2;
+  font-size: 18px;
+}
+
+/* 슬라이더 커스텀 (모바일 터치용으로 두툼하게) */
+.radius-slider {
+  width: 100%;
+  height: 10px;
+  background: #eee;
+  border-radius: 5px;
+  outline: none;
+  -webkit-appearance: none;
+}
+
+.radius-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 25px;
+  height: 25px;
+  background: #4a90e2;
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.setting-hint {
+  font-size: 13px;
+  color: #888;
+  line-height: 1.4;
+}
