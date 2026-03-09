@@ -16,6 +16,25 @@ interface SavedPlace {
   lng: number;
 }
 
+// 두 좌표 사이의 거리를 미터(m) 단위로 구하는 함수
+const getDistance = (
+  lat1: number,
+  lng1: number,
+  lat2: number,
+  lng2: number,
+) => {
+  const R = 6371e3;
+  const φ1 = (lat1 * Math.PI) / 180;
+  const φ2 = (lat2 * Math.PI) / 180;
+  const Δφ = ((lat2 - lat1) * Math.PI) / 180;
+  const Δλ = ((lng2 - lng1) * Math.PI) / 180;
+  const a =
+    Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+    Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+};
+
 const App: React.FC = () => {
   // 현재 활성화된 모달 상태 관리(검색, 장소, 설정)
   const [activeModal, setActiveModal] = useState<
@@ -36,6 +55,45 @@ const App: React.FC = () => {
     const saved = localStorage.getItem("my-places");
     return saved ? JSON.parse(saved) : [];
   });
+
+  // 알림 반경 (기본 100m)
+  const [alertRadius, setAlertRadius] = useState(100);
+  const [currentLocation, setCurrentLocation] = useState<{
+    lat: number;
+    lng: number;
+  } | null>(null);
+
+  // 사용자의 위치를 계속 추적
+  useEffect(() => {
+    if (!navigator.geolocation) return;
+
+    // watchPosition은 위치가 바뀔 때마다 실행
+    const watchId = navigator.geolocation.watchPosition(
+      (position) => {
+        const { latitude: lat, longitude: lng } = position.coords;
+        setCurrentLocation({ lat, lng });
+
+        // 내 위치가 바뀔 때마다 저장된 장소들과 거리 비교
+        savedPlaces.forEach((place) => {
+          const distance = getDistance(lat, lng, place.lat, place.lng);
+
+          if (distance <= alertRadius) {
+            console.log(
+              `${place.name}이(가) ${Math.round(distance)}m 거리에 있습니다!`,
+            );
+          }
+        });
+      },
+      (error) => console.error("위치 추적 오류:", error),
+      {
+        enableHighAccuracy: true, // 높은 정확도 (GPS 사용)
+        maximumAge: 0,
+        timeout: 5000,
+      },
+    );
+
+    return () => navigator.geolocation.clearWatch(watchId); // 컴포넌트 언마운트 시 감시 종료
+  }, [savedPlaces, alertRadius]); // 저장된 장소가 바뀌거나 반경 설정이 바뀌면 재설정
 
   // 장소 추가 함수
   const handleSavePlace = (place: Omit<SavedPlace, "id">) => {
