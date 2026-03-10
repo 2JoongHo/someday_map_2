@@ -1,6 +1,8 @@
 import React, { useEffect, useRef, useState } from "react";
 import "./App.css";
 import locationIcon from "./assets/icons/locationIcon.svg";
+import searchIcon from "./assets/icons/searchIcon2.svg";
+import settingsIcon from "./assets/icons/settingsIcon.svg";
 import Header from "./components/Header"; // 헤더 컴포넌트
 import KakaoMap from "./components/KakaoMap"; // 카카오맵 컴포넌트
 import ModalLayout from "./modals/ModalLayout"; // 모달 레이아웃 컴포넌트
@@ -21,7 +23,7 @@ const getDistance = (
   lat1: number,
   lng1: number,
   lat2: number,
-  lng2: number
+  lng2: number,
 ) => {
   const R = 6371e3;
   const φ1 = (lat1 * Math.PI) / 180;
@@ -105,7 +107,7 @@ const App: React.FC = () => {
         });
       },
       (error) => console.error(error),
-      { enableHighAccuracy: true }
+      { enableHighAccuracy: true },
     );
 
     return () => navigator.geolocation.clearWatch(watchId); // 컴포넌트 언마운트 시 감시 종료
@@ -214,6 +216,31 @@ const App: React.FC = () => {
           <SettingsModal radius={alertRadius} setRadius={setAlertRadius} />
         </ModalLayout>
       )}
+
+      {/* 화면 하단 버튼 */}
+      <nav className="bottom-nav">
+        <button
+          onClick={() => setActiveModal("search")}
+          className={activeModal === "search" ? "active" : ""}
+        >
+          <img className="nav-icon" src={searchIcon}></img>
+          <span>검색</span>
+        </button>
+        <button
+          onClick={() => setActiveModal("place")}
+          className={activeModal === "place" ? "active" : ""}
+        >
+          <img className="nav-icon" src={locationIcon} alt="내 장소"></img>
+          <span>내 장소</span>
+        </button>
+        <button
+          onClick={() => setActiveModal("settings")}
+          className={activeModal === "settings" ? "active" : ""}
+        >
+          <img className="nav-icon" src={settingsIcon}></img>
+          <span>설정</span>
+        </button>
+      </nav>
     </div>
   );
 };

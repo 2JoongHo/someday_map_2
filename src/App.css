@@ -12,6 +12,8 @@ body,
 .App {
   display: flex;
   flex-direction: column;
+  height: 100vh; /* 화면 꽉 채우기 */
+  overflow: hidden;
 }
 
 /* 지도와 버튼이 들어갈 메인 영역 */
@@ -33,4 +35,35 @@ main {
   padding: 8px;
   cursor: pointer;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.bottom-nav {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  height: 70px;
+  background: white;
+  border-top: 1px solid #eee;
+  padding-bottom: env(safe-area-inset-bottom); /* 아이폰 하단 바 대응 */
+}
+
+.bottom-nav button {
+  flex: 1;
+  border: none;
+  background: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-size: 12px;
+  color: #666;
+}
+
+.bottom-nav button.active {
+  color: #4a90e2;
+  font-weight: bold;
+}
+
+.nav-icon {
+  font-size: 20px;
+  margin-bottom: 4px;
 }
